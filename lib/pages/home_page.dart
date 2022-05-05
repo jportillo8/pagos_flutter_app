@@ -7,10 +7,12 @@ import 'package:pagos_app_flutter/blocs/pagar/pagar_bloc.dart';
 import 'package:pagos_app_flutter/data/tarjetas.dart';
 import 'package:pagos_app_flutter/helpers/helpers.dart';
 import 'package:pagos_app_flutter/pages/tarjeta_page.dart';
+import 'package:pagos_app_flutter/services/stripe_service.dart';
 import 'package:pagos_app_flutter/widgets/total_pay_button.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({Key? key}) : super(key: key);
+  final stripeService = StripeService();
+  HomePage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +29,17 @@ class HomePage extends StatelessWidget {
                 // mostraLoading(context);
                 // await Future.delayed(Duration(seconds: 1));
                 // Navigator.pop(context);
-                mostraAlerta(context, 'hola', 'mundo');
+                // mostraAlerta(context, 'hola', 'mundo');
+                final amount = pagarBloc.state.montoPagarString;
+                final currency = pagarBloc.state.modena;
+                final resp = await stripeService.pagarNuevaTarjeta(
+                    amount: amount, currency: currency);
+
+                if (resp.ok) {
+                  mostraAlerta(context, 'Tarjeta Ok', 'Todo correcto');
+                } else {
+                  mostraAlerta(context, 'Algo salio mal', resp.msg);
+                }
               },
             )
           ],

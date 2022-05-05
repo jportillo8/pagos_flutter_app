@@ -6,6 +6,8 @@ class PagarState extends Equatable {
   final bool tarjetaActiva;
   final TarjetaCredito? tarjeta;
 
+  String get montoPagarString => '${(montoPagar * 100).floor()}';
+
   const PagarState({
     this.montoPagar = 375.55,
     this.modena = 'USD',

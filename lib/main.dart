@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pagos_app_flutter/blocs/pagar/pagar_bloc.dart';
 import 'package:pagos_app_flutter/pages/home_page.dart';
 import 'package:pagos_app_flutter/pages/pago_completo_page.dart';
+import 'package:pagos_app_flutter/services/stripe_service.dart';
 
 void main() => runApp(MyApp());
 
@@ -11,6 +12,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Inicializamos Stripe Service
+    final stripeService = StripeService();
+    stripeService.init();
     return MultiBlocProvider(
       providers: [BlocProvider(create: (_) => PagarBloc())],
       child: MaterialApp(
@@ -18,7 +22,7 @@ class MyApp extends StatelessWidget {
         title: 'Stripe App',
         initialRoute: 'home',
         routes: {
-          'home': (context) => const HomePage(),
+          'home': (context) => HomePage(),
           'pago_completo': (context) => const PagoCompletoPage(),
         },
         theme: ThemeData.light().copyWith(
