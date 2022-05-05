@@ -25,11 +25,23 @@ class StripeService {
         publishableKey: _apiKey, androidPayMode: 'test', merchantId: 'test'));
   }
 
-  Future pagarConTarjetaExiste({
+/*Pagar con tarjeta existente*/
+  Future<StripeCustomResponse> pagarConTarjetaExiste({
     required String amount,
     required String currency,
     required CreditCard card,
-  }) async {}
+  }) async {
+    try {
+      final paymentMethod = await StripePayment.createPaymentMethod(
+          PaymentMethodRequest(card: card));
+      final stripeRes = await _realizarPago(
+          amount: amount, currency: currency, paymentMethod: paymentMethod);
+
+      return stripeRes;
+    } catch (e) {
+      return StripeCustomResponse(ok: false, msg: e.toString());
+    }
+  }
 
 /*Este metodo resuelve y verifica una tarjeta valida*/
   Future<StripeCustomResponse> pagarNuevaTarjeta({
@@ -48,10 +60,35 @@ class StripeService {
     }
   }
 
-  Future pagarApplePayGooglePay({
+  // Pagar con googlePay y Apple pay
+  Future<StripeCustomResponse> pagarApplePayGooglePay({
     required String amount,
     required String currency,
-  }) async {}
+  }) async {
+    try {
+      final newAmount = double.parse(amount) / 100;
+      final token = await StripePayment.paymentRequestWithNativePay(
+          androidPayOptions: AndroidPayPaymentRequest(
+              currencyCode: currency, totalPrice: amount),
+          applePayOptions: ApplePayPaymentOptions(
+              countryCode: 'MX',
+              currencyCode: currency,
+              items: [
+                ApplePayItem(label: 'Super producto 1', amount: '${newAmount}')
+              ]));
+
+      final paymentMethod = await StripePayment.createPaymentMethod(
+          PaymentMethodRequest(card: CreditCard(token: token.tokenId)));
+      final stripeRes = await _realizarPago(
+          amount: amount, currency: currency, paymentMethod: paymentMethod);
+      // En este caso debo cerrar la pantallas
+      await StripePayment.completeNativePayRequest();
+      return stripeRes;
+    } catch (e) {
+      print('Errror en intento: ${e.toString()}');
+      return StripeCustomResponse(ok: false, msg: e.toString());
+    }
+  }
 
 /*Este metodo es creado para obtener el intent de el pago*/
   Future<PaymentIntentResponse> _crearPaymentIntent({

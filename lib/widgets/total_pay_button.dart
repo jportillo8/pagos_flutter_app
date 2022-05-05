@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pagos_app_flutter/blocs/pagar/pagar_bloc.dart';
+import 'package:pagos_app_flutter/helpers/helpers.dart';
+import 'package:pagos_app_flutter/services/stripe_service.dart';
+import 'package:stripe_payment/stripe_payment.dart';
 
 class TotalPayButton extends StatelessWidget {
   const TotalPayButton({Key? key}) : super(key: key);
@@ -11,6 +14,7 @@ class TotalPayButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    final pagarBloc = BlocProvider.of<PagarBloc>(context).state;
     return Container(
       width: width,
       height: 100,
@@ -25,10 +29,11 @@ class TotalPayButton extends StatelessWidget {
         Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text('Total',
+          children: [
+            const Text('Total',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            Text('255.55 USD', style: TextStyle(fontSize: 20)),
+            Text('${pagarBloc.montoPagar} ${pagarBloc.modena}',
+                style: const TextStyle(fontSize: 20)),
           ],
         ),
         BlocBuilder<PagarBloc, PagarState>(
@@ -65,8 +70,30 @@ class _BtnPay extends StatelessWidget {
           const Text('  PagarT',
               style: TextStyle(color: Colors.white, fontSize: 22)),
         ]),
-        onPressed: () {
-          print('Pagar?');
+        onPressed: () async {
+          mostraLoading(context);
+
+          final stripeService = StripeService();
+          final state = BlocProvider.of<PagarBloc>(context).state;
+          final tarjeta = state.tarjeta;
+          final mesAnio = tarjeta!.expiracyDate.split('/');
+
+          final resp = await stripeService.pagarConTarjetaExiste(
+              amount: state.montoPagarString,
+              currency: state.modena,
+              card: CreditCard(
+                number: tarjeta.cardNumber,
+                expMonth: int.parse(mesAnio[0]),
+                expYear: int.parse(mesAnio[1]),
+              ));
+
+          Navigator.pop(context);
+
+          if (resp.ok) {
+            mostraAlerta(context, 'Tarjeta Ok', 'Todo correcto');
+          } else {
+            mostraAlerta(context, 'Algo salio mal', resp.msg);
+          }
         });
   }
 
@@ -86,6 +113,11 @@ class _BtnPay extends StatelessWidget {
           const Text(' PayX',
               style: TextStyle(color: Colors.white, fontSize: 22)),
         ]),
-        onPressed: () {});
+        onPressed: () async {
+          final stripeService = StripeService();
+          final state = BlocProvider.of<PagarBloc>(context).state;
+          final resp = await stripeService.pagarApplePayGooglePay(
+              amount: state.montoPagarString, currency: state.modena);
+        });
   }
 }
