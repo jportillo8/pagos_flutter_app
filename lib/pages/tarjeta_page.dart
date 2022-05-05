@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_credit_card/credit_card_widget.dart';
 
+import '../blocs/pagar/pagar_bloc.dart';
 import '../models/tarjeta_credito_model.dart';
 import '../widgets/total_pay_button.dart';
 
@@ -9,15 +11,19 @@ class TarjetaPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tarjeta = TarjetaCredito(
-        cardNumberHidden: '4242',
-        cardNumber: '4242424242424242',
-        brand: 'visa',
-        cvv: '213',
-        expiracyDate: '01/25',
-        cardHolderName: 'Fernando Herrera');
+    final pagarBloc = BlocProvider.of<PagarBloc>(context);
+    final tarjeta = BlocProvider.of<PagarBloc>(context).state.tarjeta!;
     return Scaffold(
-        appBar: AppBar(centerTitle: true, title: const Text('Pagar')),
+        appBar: AppBar(
+          centerTitle: true,
+          title: const Text('Pagar'),
+          leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios),
+              onPressed: () {
+                pagarBloc.add(OnDesactivarTarjeta());
+                Navigator.pop(context);
+              }),
+        ),
         body: Stack(children: [
           Container(),
           Hero(
@@ -31,7 +37,7 @@ class TarjetaPage extends StatelessWidget {
               onCreditCardWidgetChange: (CreditCardBrand) {},
             ),
           ),
-          Positioned(bottom: 0, child: TotalPayButton())
+          const Positioned(bottom: 0, child: TotalPayButton())
         ]));
   }
 }

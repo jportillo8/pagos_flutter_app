@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:pagos_app_flutter/blocs/pagar/pagar_bloc.dart';
 
 class TotalPayButton extends StatelessWidget {
   const TotalPayButton({Key? key}) : super(key: key);
@@ -29,18 +31,26 @@ class TotalPayButton extends StatelessWidget {
             Text('255.55 USD', style: TextStyle(fontSize: 20)),
           ],
         ),
-        const _BtnPay()
+        BlocBuilder<PagarBloc, PagarState>(
+          builder: (context, state) {
+            return _BtnPay(state: state);
+          },
+        )
       ]),
     );
   }
 }
 
 class _BtnPay extends StatelessWidget {
-  const _BtnPay({Key? key}) : super(key: key);
+  final PagarState state;
+  const _BtnPay({Key? key, required this.state}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return true ? builBotonTarjeta(context) : buildAppleAndGooglePay(context);
+    print(state.tarjetaActiva);
+    return state.tarjetaActiva
+        ? builBotonTarjeta(context)
+        : buildAppleAndGooglePay(context);
   }
 
   Widget builBotonTarjeta(BuildContext context) {
@@ -52,7 +62,7 @@ class _BtnPay extends StatelessWidget {
         color: Colors.black,
         child: Row(children: [
           Icon(FontAwesomeIcons.solidCreditCard, color: Colors.white),
-          const Text('  Pagar',
+          const Text('  PagarT',
               style: TextStyle(color: Colors.white, fontSize: 22)),
         ]),
         onPressed: () {
@@ -73,7 +83,7 @@ class _BtnPay extends StatelessWidget {
                   ? FontAwesomeIcons.google
                   : FontAwesomeIcons.apple,
               color: Colors.white),
-          const Text(' Pay',
+          const Text(' PayX',
               style: TextStyle(color: Colors.white, fontSize: 22)),
         ]),
         onPressed: () {});
